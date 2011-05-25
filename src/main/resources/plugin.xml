@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Plugin configuration for the broadcast plugin.
+-->
+<plugin>
+    <class>net.fosterzor.openfire.crowd.CrowdAuthPlugin</class>
+    <name>CrowdAuth</name>
+    <description>Authenticates through Atlassian Crowd</description>
+    <author>Ben Foster</author>
+    <version>1.0.0</version>
+    <date>5/25/2011</date>
+    <minServerVersion>3.7.0</minServerVersion>
+</plugin>
