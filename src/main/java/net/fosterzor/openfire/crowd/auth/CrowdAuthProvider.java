@@ -5,6 +5,7 @@ import com.atlassian.crowd.exception.ExpiredCredentialException;
 import com.atlassian.crowd.exception.OperationFailedException;
 import com.atlassian.crowd.model.user.User;
 import com.atlassian.crowd.service.client.CrowdClient;
+import net.fosterzor.openfire.crowd.CrowdClientHolder;
 import org.jivesoftware.openfire.auth.AuthProvider;
 import org.jivesoftware.openfire.auth.ConnectionException;
 import org.jivesoftware.openfire.auth.InternalUnauthenticatedException;
@@ -21,6 +22,10 @@ import org.jivesoftware.openfire.user.UserNotFoundException;
 public class CrowdAuthProvider implements AuthProvider {
     private CrowdClient client;
 
+    public CrowdAuthProvider() {
+        client = CrowdClientHolder.getClient();
+    }
+    
     @Override
     public boolean isPlainSupported() {
         return true;

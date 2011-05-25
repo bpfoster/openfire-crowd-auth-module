@@ -8,6 +8,7 @@ import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.crowd.search.query.entity.restriction.TermRestriction;
 import com.atlassian.crowd.search.query.entity.restriction.constants.GroupTermKeys;
 import com.atlassian.crowd.service.client.CrowdClient;
+import net.fosterzor.openfire.crowd.CrowdClientHolder;
 import org.jivesoftware.openfire.group.Group;
 import org.jivesoftware.openfire.group.GroupAlreadyExistsException;
 import org.jivesoftware.openfire.group.GroupNotFoundException;
@@ -28,6 +29,10 @@ import java.util.List;
  */
 public class CrowdGroupProvider implements GroupProvider {
     private CrowdClient client;
+
+    public CrowdGroupProvider() {
+        client = CrowdClientHolder.getClient();
+    }
 
     @Override
     public Group createGroup(String s) throws UnsupportedOperationException, GroupAlreadyExistsException {

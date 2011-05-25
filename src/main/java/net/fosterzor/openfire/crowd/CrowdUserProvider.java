@@ -23,6 +23,10 @@ import java.util.Set;
 public class CrowdUserProvider implements UserProvider {
 
     private CrowdClient client;
+
+    public CrowdUserProvider() {
+        client = CrowdClientHolder.getClient();
+    }
     
     @Override
     public User loadUser(String username) throws UserNotFoundException {
