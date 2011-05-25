@@ -1,18 +1,23 @@
 package net.fosterzor.openfire.crowd.group;
 
-import com.atlassian.crowd.integration.exception.InvalidAuthorizationTokenException;
-import com.atlassian.crowd.integration.exception.ObjectNotFoundException;
-import com.atlassian.crowd.integration.service.GroupManager;
-import com.atlassian.crowd.integration.service.GroupMembershipManager;
-import com.atlassian.crowd.integration.soap.SOAPGroup;
+import com.atlassian.crowd.embedded.api.SearchRestriction;
+import com.atlassian.crowd.exception.ApplicationPermissionException;
+import com.atlassian.crowd.exception.InvalidAuthenticationException;
+import com.atlassian.crowd.exception.OperationFailedException;
+import com.atlassian.crowd.exception.UserNotFoundException;
+import com.atlassian.crowd.search.query.entity.restriction.TermRestriction;
+import com.atlassian.crowd.search.query.entity.restriction.constants.GroupTermKeys;
+import com.atlassian.crowd.service.client.CrowdClient;
 import org.jivesoftware.openfire.group.Group;
 import org.jivesoftware.openfire.group.GroupAlreadyExistsException;
 import org.jivesoftware.openfire.group.GroupNotFoundException;
 import org.jivesoftware.openfire.group.GroupProvider;
 import org.xmpp.packet.JID;
 
-import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -22,8 +27,7 @@ import java.util.Collection;
  * To change this template use File | Settings | File Templates.
  */
 public class CrowdGroupProvider implements GroupProvider {
-    private GroupManager groupManager;
-    private GroupMembershipManager groupMembershipManager;
+    private CrowdClient client;
 
     @Override
     public Group createGroup(String s) throws UnsupportedOperationException, GroupAlreadyExistsException {
@@ -36,19 +40,40 @@ public class CrowdGroupProvider implements GroupProvider {
     }
 
     @Override
-    public Group getGroup(String s) throws GroupNotFoundException {
+    public Group getGroup(String name) throws GroupNotFoundException {
+        Group group = null;
+        //try {
         try {
-            SOAPGroup soapGroup = groupManager.getGroup(s);
-        } catch (RemoteException e) {
+            com.atlassian.crowd.model.group.Group crowdGroup = client.getGroup(name);
+
+            if (crowdGroup == null) {
+                throw new GroupNotFoundException("Group " + name + " not found");
+            }
+            String name1 = crowdGroup.getName();
+            String description = crowdGroup.getDescription();
+
+            int startIndex = 0;
+            int fetchSize = -1;
+
+            List<String> namesOfUsersOfGroup = client.getNamesOfUsersOfGroup(name1, startIndex, fetchSize);
+            List<JID> membersJid = new ArrayList<JID>(namesOfUsersOfGroup.size());
+            for (String member : namesOfUsersOfGroup) {
+                membersJid.add(new JID(member));
+            }
+
+            group = new Group(name, description, membersJid, Collections.<JID>emptyList());
+
+        } catch (com.atlassian.crowd.exception.GroupNotFoundException e) {
+            throw new GroupNotFoundException("Group " + name + " not found", e);
+        } catch (OperationFailedException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (InvalidAuthorizationTokenException e) {
+        } catch (InvalidAuthenticationException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (ObjectNotFoundException e) {
-            throw new GroupNotFoundException("Group not found", e);
+        } catch (ApplicationPermissionException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
-        Group group = new Group();
-        group.
+        return group;
     }
 
     @Override
@@ -63,32 +88,53 @@ public class CrowdGroupProvider implements GroupProvider {
 
     @Override
     public int getGroupCount() {
-        // TODO: Auto-generated method
-        return 0;
+        return getGroupNames().size();
     }
 
     @Override
     public Collection<String> getGroupNames() {
-        // TODO: Auto-generated method
-        return null;
+        return getGroupNames(0, -1);
     }
 
     @Override
     public Collection<String> getSharedGroupsNames() {
-        // TODO: Auto-generated method
-        return null;
+        // TOOD: Is this right?
+        return getGroupNames();
     }
 
     @Override
-    public Collection<String> getGroupNames(int i, int i1) {
-        // TODO: Auto-generated method
-        return null;
+    public Collection<String> getGroupNames(int startIndex, int numResults) {
+        Collection<String> groups = null;
+        try {
+            groups = client.searchGroupNames(null, startIndex, numResults);
+        } catch (OperationFailedException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (InvalidAuthenticationException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (ApplicationPermissionException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+        return groups;
     }
 
     @Override
-    public Collection<String> getGroupNames(JID jid) {
-        // TODO: Auto-generated method
-        return null;
+    public Collection<String> getGroupNames(JID user) {
+        // TODO user.getNode()?
+        Collection<String> groupNames = null;
+
+        try {
+            groupNames = client.getNamesOfGroupsForUser(user.getNode(), 0, -1);
+        } catch (ApplicationPermissionException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (UserNotFoundException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (OperationFailedException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (InvalidAuthenticationException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
+        return groupNames;
     }
 
     @Override
@@ -112,20 +158,30 @@ public class CrowdGroupProvider implements GroupProvider {
     }
 
     @Override
-    public Collection<String> search(String s) {
-        // TODO: Auto-generated method
-        return null;
+    public Collection<String> search(String query) {
+        return search(query, 0, -1);
     }
 
     @Override
-    public Collection<String> search(String s, int i, int i1) {
-        // TODO: Auto-generated method
-        return null;
+    public Collection<String> search(String query, int startIndex, int numResults) {
+        // TODO: I really dunno about this SearchRestriction
+        Collection<String> groupNames = null;
+        SearchRestriction restriction = new TermRestriction(GroupTermKeys.NAME, query);
+        try {
+            groupNames = client.searchGroupNames(restriction, startIndex, numResults);
+        } catch (OperationFailedException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (InvalidAuthenticationException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (ApplicationPermissionException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+        
+        return groupNames;
     }
 
     @Override
     public boolean isSearchSupported() {
-        // TODO: Auto-generated method
-        return false;
+        return true;
     }
 }
