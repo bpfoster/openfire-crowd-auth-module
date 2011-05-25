@@ -5,6 +5,7 @@ import com.atlassian.crowd.exception.ApplicationPermissionException;
 import com.atlassian.crowd.exception.InvalidAuthenticationException;
 import com.atlassian.crowd.exception.OperationFailedException;
 import com.atlassian.crowd.exception.UserNotFoundException;
+import com.atlassian.crowd.search.query.entity.restriction.NullRestrictionImpl;
 import com.atlassian.crowd.search.query.entity.restriction.TermRestriction;
 import com.atlassian.crowd.search.query.entity.restriction.constants.GroupTermKeys;
 import com.atlassian.crowd.service.client.CrowdClient;
@@ -63,7 +64,11 @@ public class CrowdGroupProvider implements GroupProvider {
             List<String> namesOfUsersOfGroup = client.getNamesOfUsersOfGroup(name1, startIndex, fetchSize);
             List<JID> membersJid = new ArrayList<JID>(namesOfUsersOfGroup.size());
             for (String member : namesOfUsersOfGroup) {
-                membersJid.add(new JID(member));
+                try {
+                    membersJid.add(new JID(member));
+                } catch (IllegalArgumentException e) {
+                    // member isn't allowed in openfire
+                }
             }
 
             group = new Group(name, description, membersJid, Collections.<JID>emptyList());
@@ -111,7 +116,7 @@ public class CrowdGroupProvider implements GroupProvider {
     public Collection<String> getGroupNames(int startIndex, int numResults) {
         Collection<String> groups = null;
         try {
-            groups = client.searchGroupNames(null, startIndex, numResults);
+            groups = client.searchGroupNames(NullRestrictionImpl.INSTANCE, startIndex, numResults);
         } catch (OperationFailedException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         } catch (InvalidAuthenticationException e) {

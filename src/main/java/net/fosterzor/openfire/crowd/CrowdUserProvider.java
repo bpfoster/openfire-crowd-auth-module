@@ -3,15 +3,14 @@ package net.fosterzor.openfire.crowd;
 import com.atlassian.crowd.exception.ApplicationPermissionException;
 import com.atlassian.crowd.exception.InvalidAuthenticationException;
 import com.atlassian.crowd.exception.OperationFailedException;
+import com.atlassian.crowd.search.query.entity.restriction.NullRestrictionImpl;
 import com.atlassian.crowd.service.client.CrowdClient;
 import org.jivesoftware.openfire.user.User;
 import org.jivesoftware.openfire.user.UserAlreadyExistsException;
 import org.jivesoftware.openfire.user.UserNotFoundException;
 import org.jivesoftware.openfire.user.UserProvider;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -21,6 +20,7 @@ import java.util.Set;
  * To change this template use File | Settings | File Templates.
  */
 public class CrowdUserProvider implements UserProvider {
+    private static final Date NOTIME = new Date(0);
 
     private CrowdClient client;
 
@@ -33,7 +33,7 @@ public class CrowdUserProvider implements UserProvider {
         User user = null;
         try {
             com.atlassian.crowd.model.user.User crowdUser = client.getUser(username);
-            user = new User(crowdUser.getName(), crowdUser.getDisplayName(), crowdUser.getEmailAddress(), null, null);
+            user = new User(crowdUser.getName(), crowdUser.getDisplayName(), crowdUser.getEmailAddress(), NOTIME, NOTIME);
         } catch (com.atlassian.crowd.exception.UserNotFoundException e) {
             throw new UserNotFoundException("User not found", e);
         } catch (OperationFailedException e) {
@@ -61,26 +61,51 @@ public class CrowdUserProvider implements UserProvider {
 
     @Override
     public int getUserCount() {
-        // TODO: Auto-generated method
-        return 0;
+        // TODO: More efficient way?
+        return getUsers().size();
     }
 
     @Override
     public Collection<User> getUsers() {
-        // TODO: Auto-generated method
-        return null;
+        return getUsers(0, -1);
     }
 
     @Override
     public Collection<String> getUsernames() {
-        // TODO: Auto-generated method
-        return null;
+        Collection<String> usernames = null;
+        try {
+            usernames = client.searchUserNames(NullRestrictionImpl.INSTANCE, 0, -1);
+        } catch (OperationFailedException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (InvalidAuthenticationException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (ApplicationPermissionException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
+        return usernames;
     }
 
     @Override
     public Collection<User> getUsers(int startIndex, int numResults) {
-        // TODO: Auto-generated method
-        return null;
+        List<User> users = new ArrayList<User>();
+
+        try {
+            // TODO: Limit this list to just chat-enabled users
+            
+            List<com.atlassian.crowd.model.user.User> crowdUsers = client.searchUsers(NullRestrictionImpl.INSTANCE, startIndex, numResults);
+            for(com.atlassian.crowd.model.user.User crowdUser : crowdUsers) {
+                users.add(new User(crowdUser.getName(), crowdUser.getDisplayName(), crowdUser.getEmailAddress(), NOTIME, NOTIME));
+            }
+        } catch (OperationFailedException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (InvalidAuthenticationException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (ApplicationPermissionException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
+        return users;
     }
 
     @Override
@@ -132,13 +157,11 @@ public class CrowdUserProvider implements UserProvider {
 
     @Override
     public boolean isNameRequired() {
-        // TODO: Auto-generated method
-        return false;
+        return true;
     }
 
     @Override
     public boolean isEmailRequired() {
-        // TODO: Auto-generated method
-        return false;
+        return true;
     }
 }
