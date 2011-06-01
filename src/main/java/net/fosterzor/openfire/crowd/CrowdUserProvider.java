@@ -33,6 +33,9 @@ public class CrowdUserProvider implements UserProvider {
         User user = null;
         try {
             com.atlassian.crowd.model.user.User crowdUser = client.getUser(username);
+            if (crowdUser == null) {
+                throw new UserNotFoundException();
+            }
             user = new User(crowdUser.getName(), crowdUser.getDisplayName(), crowdUser.getEmailAddress(), NOTIME, NOTIME);
         } catch (com.atlassian.crowd.exception.UserNotFoundException e) {
             throw new UserNotFoundException("User not found", e);
@@ -49,14 +52,13 @@ public class CrowdUserProvider implements UserProvider {
 
     @Override
     public User createUser(String username, String password, String name, String email) throws UserAlreadyExistsException {
-        // TODO: Auto-generated method
+        // Unsupported
         return null;
     }
 
     @Override
     public void deleteUser(String username) {
-        // TODO: Auto-generated method
-
+        // Unsupported
     }
 
     @Override
@@ -110,32 +112,29 @@ public class CrowdUserProvider implements UserProvider {
 
     @Override
     public void setName(String username, String name) throws UserNotFoundException {
-        // TODO: Auto-generated method
-
+        // Unsupported
     }
 
     @Override
     public void setEmail(String username, String email) throws UserNotFoundException {
-        // TODO: Auto-generated method
-
+        // Unsupported
     }
 
     @Override
     public void setCreationDate(String username, Date creationDate) throws UserNotFoundException {
-        // TODO: Auto-generated method
-
+        // Unsupported
     }
 
     @Override
     public void setModificationDate(String username, Date modificationDate) throws UserNotFoundException {
-        // TODO: Auto-generated method
-
+        // Unsupported
     }
 
     @Override
     public Set<String> getSearchFields() throws UnsupportedOperationException {
-        // TODO: Auto-generated method
-        return null;
+        Set<String> fields = new HashSet<String>(Arrays.asList("name", "email", "firstName", "lastName", "displayName"));
+
+        return fields;
     }
 
     @Override

@@ -38,7 +38,6 @@ public class CrowdAuthProvider implements AuthProvider {
 
     @Override
     public void authenticate(String username, String password) throws UnauthorizedException, ConnectionException, InternalUnauthenticatedException {
-
         try {
             User user = client.authenticateUser(username, password);
             if (user == null) {

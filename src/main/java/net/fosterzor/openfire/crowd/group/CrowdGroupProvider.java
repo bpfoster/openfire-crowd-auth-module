@@ -108,7 +108,7 @@ public class CrowdGroupProvider implements GroupProvider {
 
     @Override
     public Collection<String> getSharedGroupsNames() {
-        // TOOD: Is this right?
+        // TODO: Is this right?
         return getGroupNames();
     }
 
