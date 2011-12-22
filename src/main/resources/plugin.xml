@@ -5,10 +5,10 @@
 -->
 <plugin>
     <class>net.fosterzor.openfire.crowd.CrowdAuthPlugin</class>
-    <name>CrowdAuth</name>
+    <name>Crowd Authentication and Group Provider</name>
     <description>Authenticates through Atlassian Crowd</description>
     <author>Ben Foster</author>
     <version>1.0.0</version>
-    <date>5/25/2011</date>
+    <date>12/22/2011</date>
     <minServerVersion>3.7.0</minServerVersion>
 </plugin>
