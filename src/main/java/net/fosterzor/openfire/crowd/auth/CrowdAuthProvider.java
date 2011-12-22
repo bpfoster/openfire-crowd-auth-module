@@ -11,6 +11,8 @@ import org.jivesoftware.openfire.auth.ConnectionException;
 import org.jivesoftware.openfire.auth.InternalUnauthenticatedException;
 import org.jivesoftware.openfire.auth.UnauthorizedException;
 import org.jivesoftware.openfire.user.UserNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -20,6 +22,7 @@ import org.jivesoftware.openfire.user.UserNotFoundException;
  * To change this template use File | Settings | File Templates.
  */
 public class CrowdAuthProvider implements AuthProvider {
+    private static final Logger logger = LoggerFactory.getLogger(CrowdAuthProvider.class);
     private CrowdClient client;
 
     public CrowdAuthProvider() {

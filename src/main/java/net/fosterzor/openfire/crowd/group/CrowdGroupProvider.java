@@ -15,6 +15,8 @@ import org.jivesoftware.openfire.group.Group;
 import org.jivesoftware.openfire.group.GroupAlreadyExistsException;
 import org.jivesoftware.openfire.group.GroupNotFoundException;
 import org.jivesoftware.openfire.group.GroupProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xmpp.packet.JID;
 
 import java.util.ArrayList;
@@ -30,6 +32,7 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 public class CrowdGroupProvider implements GroupProvider {
+    private static final Logger logger = LoggerFactory.getLogger(CrowdGroupProvider.class);
     private XMPPServer server = XMPPServer.getInstance();
     private CrowdClient client;
 
@@ -137,7 +140,6 @@ public class CrowdGroupProvider implements GroupProvider {
 
     @Override
     public Collection<String> getGroupNames(JID user) {
-        // TODO user.getNode()?
         Collection<String> groupNames = null;
 
         try {
