@@ -17,7 +17,7 @@ public class CrowdClientHolder {
         if (client == null) {
             synchronized (CrowdClientHolder.class) {
                 if (client == null) {
-                    client = new RestCrowdClientFactory().newInstance("https://rp-sdlc.six3systems.com/crowd", "ben", "Password99$");
+                    client = new RestCrowdClientFactory().newInstance("http://localhost:8095/crowd", "openfire", "password");
                 }
             }
         }

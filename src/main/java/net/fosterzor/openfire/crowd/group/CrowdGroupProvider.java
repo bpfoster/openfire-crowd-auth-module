@@ -10,6 +10,7 @@ import com.atlassian.crowd.search.query.entity.restriction.TermRestriction;
 import com.atlassian.crowd.search.query.entity.restriction.constants.GroupTermKeys;
 import com.atlassian.crowd.service.client.CrowdClient;
 import net.fosterzor.openfire.crowd.CrowdClientHolder;
+import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.group.Group;
 import org.jivesoftware.openfire.group.GroupAlreadyExistsException;
 import org.jivesoftware.openfire.group.GroupNotFoundException;
@@ -29,6 +30,7 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 public class CrowdGroupProvider implements GroupProvider {
+    private XMPPServer server = XMPPServer.getInstance();
     private CrowdClient client;
 
     public CrowdGroupProvider() {
@@ -48,7 +50,6 @@ public class CrowdGroupProvider implements GroupProvider {
     @Override
     public Group getGroup(String name) throws GroupNotFoundException {
         Group group = null;
-        //try {
         try {
             com.atlassian.crowd.model.group.Group crowdGroup = client.getGroup(name);
 
@@ -65,7 +66,14 @@ public class CrowdGroupProvider implements GroupProvider {
             List<JID> membersJid = new ArrayList<JID>(namesOfUsersOfGroup.size());
             for (String member : namesOfUsersOfGroup) {
                 try {
-                    membersJid.add(new JID(member));
+                    JID userJID = null;
+                    if (member.indexOf('@') == -1) {
+                        // Create JID of local user if JID does not match a component's JID
+                        userJID = server.createJID(member, null);
+                    } else {
+                        userJID = new JID(member);
+                    }
+                    membersJid.add(userJID);
                 } catch (IllegalArgumentException e) {
                     // member isn't allowed in openfire
                 }
