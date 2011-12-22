@@ -105,11 +105,11 @@ public class CrowdGroupProvider implements GroupProvider {
         } catch (com.atlassian.crowd.exception.GroupNotFoundException e) {
             throw new GroupNotFoundException("Group " + name + " not found", e);
         } catch (OperationFailedException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error getting group", e);
         } catch (InvalidAuthenticationException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error getting group", e);
         } catch (ApplicationPermissionException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error getting group", e);
         }
 
         return group;
@@ -147,11 +147,11 @@ public class CrowdGroupProvider implements GroupProvider {
         try {
             groups = client.searchGroupNames(NullRestrictionImpl.INSTANCE, startIndex, numResults);
         } catch (OperationFailedException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error getting group names", e);
         } catch (InvalidAuthenticationException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error getting group names", e);
         } catch (ApplicationPermissionException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error getting group names", e);
         }
         return groups;
     }
@@ -163,13 +163,13 @@ public class CrowdGroupProvider implements GroupProvider {
         try {
             groupNames = client.getNamesOfGroupsForUser(user.getNode(), 0, -1);
         } catch (ApplicationPermissionException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error getting group names", e);
         } catch (UserNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error getting group names", e);
         } catch (OperationFailedException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error getting group names", e);
         } catch (InvalidAuthenticationException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error getting group names", e);
         }
 
         return groupNames;
@@ -208,11 +208,11 @@ public class CrowdGroupProvider implements GroupProvider {
         try {
             groupNames = client.searchGroupNames(restriction, startIndex, numResults);
         } catch (OperationFailedException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error searching groups", e);
         } catch (InvalidAuthenticationException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error searching groups", e);
         } catch (ApplicationPermissionException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error searching groups", e);
         }
         
         return groupNames;

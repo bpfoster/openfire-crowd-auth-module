@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
  * To change this template use File | Settings | File Templates.
  */
 public class CrowdAuthProvider implements AuthProvider {
-    private static final Logger logger = LoggerFactory.getLogger(CrowdAuthProvider.class);
     private CrowdClient client;
 
     public CrowdAuthProvider() {

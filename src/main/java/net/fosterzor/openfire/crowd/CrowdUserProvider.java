@@ -27,6 +27,8 @@ import org.jivesoftware.openfire.user.User;
 import org.jivesoftware.openfire.user.UserAlreadyExistsException;
 import org.jivesoftware.openfire.user.UserNotFoundException;
 import org.jivesoftware.openfire.user.UserProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -38,6 +40,7 @@ import java.util.*;
  * To change this template use File | Settings | File Templates.
  */
 public class CrowdUserProvider implements UserProvider {
+    private static final Logger logger = LoggerFactory.getLogger(CrowdUserProvider.class);
     private static final Date NOTIME = new Date(0);
 
     private CrowdClient client;
@@ -96,11 +99,11 @@ public class CrowdUserProvider implements UserProvider {
         try {
             usernames = client.searchUserNames(NullRestrictionImpl.INSTANCE, 0, -1);
         } catch (OperationFailedException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error fetching usernames", e);
         } catch (InvalidAuthenticationException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error fetching usernames", e);
         } catch (ApplicationPermissionException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error fetching usernames", e);
         }
 
         return usernames;
@@ -118,11 +121,11 @@ public class CrowdUserProvider implements UserProvider {
                 users.add(new User(crowdUser.getName(), crowdUser.getDisplayName(), crowdUser.getEmailAddress(), NOTIME, NOTIME));
             }
         } catch (OperationFailedException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error fetching users", e);
         } catch (InvalidAuthenticationException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error fetching users", e);
         } catch (ApplicationPermissionException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Error fetching users", e);
         }
 
         return users;
