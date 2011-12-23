@@ -20,7 +20,7 @@
 
     <groupId>net.fosterzor</groupId>
     <artifactId>openfire-crowd-auth-plugin</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2-SNAPSHOT</version>
 
     <repositories>
         <repository>
