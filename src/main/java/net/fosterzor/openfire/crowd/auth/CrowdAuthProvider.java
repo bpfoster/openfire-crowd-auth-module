@@ -29,8 +29,6 @@ import org.jivesoftware.openfire.auth.ConnectionException;
 import org.jivesoftware.openfire.auth.InternalUnauthenticatedException;
 import org.jivesoftware.openfire.auth.UnauthorizedException;
 import org.jivesoftware.openfire.user.UserNotFoundException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -44,6 +42,11 @@ public class CrowdAuthProvider implements AuthProvider {
 
     public CrowdAuthProvider() {
         client = CrowdClientHolder.getClient();
+    }
+
+    // For unit testing
+    protected CrowdAuthProvider(CrowdClient client) {
+        this.client = client;
     }
     
     @Override

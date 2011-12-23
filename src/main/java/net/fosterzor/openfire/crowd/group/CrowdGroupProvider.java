@@ -24,8 +24,8 @@ import com.atlassian.crowd.exception.InvalidAuthenticationException;
 import com.atlassian.crowd.exception.OperationFailedException;
 import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.crowd.search.query.entity.restriction.NullRestrictionImpl;
+import com.atlassian.crowd.search.query.entity.restriction.PropertyImpl;
 import com.atlassian.crowd.search.query.entity.restriction.TermRestriction;
-import com.atlassian.crowd.search.query.entity.restriction.constants.GroupTermKeys;
 import com.atlassian.crowd.service.client.CrowdClient;
 import net.fosterzor.openfire.crowd.CrowdClientHolder;
 import org.jivesoftware.openfire.XMPPServer;
@@ -56,6 +56,11 @@ public class CrowdGroupProvider implements GroupProvider {
 
     public CrowdGroupProvider() {
         client = CrowdClientHolder.getClient();
+    }
+
+    // For unit testing only
+    protected CrowdGroupProvider(CrowdClient client) {
+        this.client = client;
     }
 
     @Override
@@ -204,7 +209,7 @@ public class CrowdGroupProvider implements GroupProvider {
     public Collection<String> search(String query, int startIndex, int numResults) {
         // TODO: I really dunno about this SearchRestriction
         Collection<String> groupNames = null;
-        SearchRestriction restriction = new TermRestriction(GroupTermKeys.NAME, query);
+        SearchRestriction restriction = new TermRestriction(new PropertyImpl("name", String.class), query);
         try {
             groupNames = client.searchGroupNames(restriction, startIndex, numResults);
         } catch (OperationFailedException e) {

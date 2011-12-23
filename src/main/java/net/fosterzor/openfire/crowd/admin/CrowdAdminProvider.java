@@ -51,7 +51,7 @@ public class CrowdAdminProvider implements AdminProvider {
         GroupProvider provider = GroupManager.getInstance().getProvider();
 
         String groupsString = JiveGlobals.getProperty(ADMIN_GROUP_PROP_NAME, "openfire-administrators");
-        String[] groups = groupsString.split("\\s*,\\s");
+        String[] groups = groupsString.split("\\s*,\\s*");
         for (String groupName : groups) {
             try {
                 Group group = provider.getGroup(groupName);
@@ -63,10 +63,14 @@ public class CrowdAdminProvider implements AdminProvider {
 
         if (admins.size() == 0) {
             // Allow "admin" user to still log in just in case
-            admins.add(server.createJID("admin", null));
+            admins.add(createJID("admin"));
         }
 
         return admins;
+    }
+
+    protected JID createJID(String username) {
+        return server.createJID("admin", null);
     }
 
     @Override

@@ -18,10 +18,11 @@
 
 package net.fosterzor.openfire.crowd;
 
+import com.atlassian.crowd.embedded.api.SearchRestriction;
 import com.atlassian.crowd.exception.ApplicationPermissionException;
 import com.atlassian.crowd.exception.InvalidAuthenticationException;
 import com.atlassian.crowd.exception.OperationFailedException;
-import com.atlassian.crowd.search.query.entity.restriction.NullRestrictionImpl;
+import com.atlassian.crowd.search.query.entity.restriction.*;
 import com.atlassian.crowd.service.client.CrowdClient;
 import org.jivesoftware.openfire.user.User;
 import org.jivesoftware.openfire.user.UserAlreadyExistsException;
@@ -41,6 +42,7 @@ import java.util.*;
  */
 public class CrowdUserProvider implements UserProvider {
     private static final Logger logger = LoggerFactory.getLogger(CrowdUserProvider.class);
+    private static final TermRestriction ACTIVE_TERM_RESTRICTION = new TermRestriction(new PropertyImpl("active", Boolean.class), true);
     private static final Date NOTIME = new Date(0);
 
     private CrowdClient client;
@@ -48,7 +50,12 @@ public class CrowdUserProvider implements UserProvider {
     public CrowdUserProvider() {
         client = CrowdClientHolder.getClient();
     }
-    
+
+    // For unit testing
+    protected CrowdUserProvider(CrowdClient client) {
+        this.client = client;
+    }
+
     @Override
     public User loadUser(String username) throws UserNotFoundException {
         User user = null;
@@ -111,15 +118,11 @@ public class CrowdUserProvider implements UserProvider {
 
     @Override
     public Collection<User> getUsers(int startIndex, int numResults) {
-        List<User> users = new ArrayList<User>();
+        Collection<User> users = null;
 
         try {
-            // TODO: Limit this list to just chat-enabled users
-            
-            List<com.atlassian.crowd.model.user.User> crowdUsers = client.searchUsers(NullRestrictionImpl.INSTANCE, startIndex, numResults);
-            for(com.atlassian.crowd.model.user.User crowdUser : crowdUsers) {
-                users.add(new User(crowdUser.getName(), crowdUser.getDisplayName(), crowdUser.getEmailAddress(), NOTIME, NOTIME));
-            }
+            List<com.atlassian.crowd.model.user.User> crowdUsers = client.searchUsers(ACTIVE_TERM_RESTRICTION, startIndex, numResults);
+            users = transformUsers(crowdUsers);
         } catch (OperationFailedException e) {
             logger.error("Error fetching users", e);
         } catch (InvalidAuthenticationException e) {
@@ -160,14 +163,42 @@ public class CrowdUserProvider implements UserProvider {
 
     @Override
     public Collection<User> findUsers(Set<String> fields, String query) throws UnsupportedOperationException {
-        // TODO: Auto-generated method
-        return null;
+        return findUsers(fields, query, 0, -1);
     }
 
     @Override
     public Collection<User> findUsers(Set<String> fields, String query, int startIndex, int numResults) throws UnsupportedOperationException {
-        // TODO: Auto-generated method
-        return null;
+        List<SearchRestriction> termRestrictionList = new ArrayList<SearchRestriction>(fields.size());
+        for (String field : fields) {
+            termRestrictionList.add(new TermRestriction(new PropertyImpl(field, String.class), MatchMode.CONTAINS, query));
+        }
+
+        SearchRestriction fieldsRestrictions = new BooleanRestrictionImpl(BooleanRestriction.BooleanLogic.OR, termRestrictionList);
+
+        SearchRestriction restriction = new BooleanRestrictionImpl(BooleanRestriction.BooleanLogic.AND, fieldsRestrictions, ACTIVE_TERM_RESTRICTION);
+
+        Collection<User> users = null;
+        try {
+            List<com.atlassian.crowd.model.user.User> crowdUsers = client.searchUsers(restriction, startIndex, numResults);
+            users = transformUsers(crowdUsers);
+        } catch (OperationFailedException e) {
+            logger.error("Error searching users", e);
+        } catch (InvalidAuthenticationException e) {
+            logger.error("Error searching users", e);
+        } catch (ApplicationPermissionException e) {
+            logger.error("Error searching users", e);
+        }
+
+        return users;
+    }
+
+    private Collection<User> transformUsers(List<com.atlassian.crowd.model.user.User> crowdUsers) {
+        Collection<User> users = new ArrayList<User>();
+        for (com.atlassian.crowd.model.user.User crowdUser : crowdUsers) {
+            users.add(new User(crowdUser.getName(), crowdUser.getDisplayName(), crowdUser.getEmailAddress(), NOTIME, NOTIME));
+        }
+
+        return users;
     }
 
     @Override
