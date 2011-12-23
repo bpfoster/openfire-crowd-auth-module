@@ -11,7 +11,7 @@ To engage the module, follow these steps:
 
 1. Download the openfire-crowd-auth-module jar and place it in your Openfire installation under the /lib folder
 2. Copy the crowd-integration-client-*.jar to the lib folder as well
-3. Copy crowd.properties to openfire/conf and configure it
+3. Copy crowd.properties and crowd-ehcache.xml from crowd/client/conf to openfire/conf and configure it
 4. Boot up Openfire and configure the following System Properties within Openfire:
 
 		provider.admin.className = net.fosterzor.openfire.crowd.admin.CrowdAdminProvider
