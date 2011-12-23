@@ -35,6 +35,10 @@
         </repository>
     </repositories>
 
+    <scm>
+        <developerConnection>scm:git:git@github.com:bpfoster/openfire-crowd-auth-module.git</developerConnection>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
