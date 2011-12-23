@@ -23,7 +23,8 @@ import com.atlassian.crowd.exception.ApplicationPermissionException;
 import com.atlassian.crowd.exception.InvalidAuthenticationException;
 import com.atlassian.crowd.exception.OperationFailedException;
 import com.atlassian.crowd.exception.UserNotFoundException;
-import com.atlassian.crowd.search.query.entity.restriction.NullRestrictionImpl;
+import com.atlassian.crowd.search.query.entity.restriction.BooleanRestriction;
+import com.atlassian.crowd.search.query.entity.restriction.BooleanRestrictionImpl;
 import com.atlassian.crowd.search.query.entity.restriction.PropertyImpl;
 import com.atlassian.crowd.search.query.entity.restriction.TermRestriction;
 import com.atlassian.crowd.service.client.CrowdClient;
@@ -51,6 +52,7 @@ import java.util.List;
  */
 public class CrowdGroupProvider implements GroupProvider {
     private static final Logger logger = LoggerFactory.getLogger(CrowdGroupProvider.class);
+    private static final TermRestriction ACTIVE_TERM_RESTRICTION = new TermRestriction(new PropertyImpl("active", Boolean.class), true);
     private XMPPServer server = XMPPServer.getInstance();
     private CrowdClient client;
 
@@ -150,7 +152,7 @@ public class CrowdGroupProvider implements GroupProvider {
     public Collection<String> getGroupNames(int startIndex, int numResults) {
         Collection<String> groups = null;
         try {
-            groups = client.searchGroupNames(NullRestrictionImpl.INSTANCE, startIndex, numResults);
+            groups = client.searchGroupNames(ACTIVE_TERM_RESTRICTION, startIndex, numResults);
         } catch (OperationFailedException e) {
             logger.error("Error getting group names", e);
         } catch (InvalidAuthenticationException e) {
@@ -207,9 +209,9 @@ public class CrowdGroupProvider implements GroupProvider {
 
     @Override
     public Collection<String> search(String query, int startIndex, int numResults) {
-        // TODO: I really dunno about this SearchRestriction
         Collection<String> groupNames = null;
-        SearchRestriction restriction = new TermRestriction(new PropertyImpl("name", String.class), query);
+        SearchRestriction nameRestriction = new TermRestriction(new PropertyImpl("name", String.class), query);
+        SearchRestriction restriction = new BooleanRestrictionImpl(BooleanRestriction.BooleanLogic.AND, nameRestriction, ACTIVE_TERM_RESTRICTION);
         try {
             groupNames = client.searchGroupNames(restriction, startIndex, numResults);
         } catch (OperationFailedException e) {
@@ -219,7 +221,7 @@ public class CrowdGroupProvider implements GroupProvider {
         } catch (ApplicationPermissionException e) {
             logger.error("Error searching groups", e);
         }
-        
+
         return groupNames;
     }
 

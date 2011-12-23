@@ -104,7 +104,7 @@ public class CrowdUserProvider implements UserProvider {
     public Collection<String> getUsernames() {
         Collection<String> usernames = null;
         try {
-            usernames = client.searchUserNames(NullRestrictionImpl.INSTANCE, 0, -1);
+            usernames = client.searchUserNames(ACTIVE_TERM_RESTRICTION, 0, -1);
         } catch (OperationFailedException e) {
             logger.error("Error fetching usernames", e);
         } catch (InvalidAuthenticationException e) {
