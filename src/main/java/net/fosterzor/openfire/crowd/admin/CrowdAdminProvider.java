@@ -40,6 +40,8 @@ import java.util.List;
 public class CrowdAdminProvider implements AdminProvider {
     private static final Logger logger = LoggerFactory.getLogger(CrowdAdminProvider.class);
     private static final String ADMIN_GROUP_PROP_NAME = "crowdAuth.admin.groups";
+    private static final String DEFAULT_ADMIN_GROUP_NAME = "openfire-administrators";
+    private static final String CSV_SPLIT_REGEX = "\\s*,\\s*";
 
     private XMPPServer server = XMPPServer.getInstance();
 
@@ -48,8 +50,8 @@ public class CrowdAdminProvider implements AdminProvider {
         List<JID> admins = new ArrayList<JID>();
         GroupProvider provider = GroupManager.getInstance().getProvider();
 
-        String groupsString = JiveGlobals.getProperty(ADMIN_GROUP_PROP_NAME, "openfire-administrators");
-        String[] groups = groupsString.split("\\s*,\\s*");
+        String groupsString = JiveGlobals.getProperty(ADMIN_GROUP_PROP_NAME, DEFAULT_ADMIN_GROUP_NAME);
+        String[] groups = groupsString.split(CSV_SPLIT_REGEX);
         for (String groupName : groups) {
             try {
                 Group group = provider.getGroup(groupName);
