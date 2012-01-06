@@ -79,30 +79,26 @@ public class CrowdGroupProvider implements GroupProvider {
         try {
             com.atlassian.crowd.model.group.Group crowdGroup = client.getGroup(name);
 
-            if (crowdGroup == null) {
+            if (crowdGroup == null || !crowdGroup.isActive()) {
                 throw new GroupNotFoundException("Group " + name + " not found");
             }
-            String name1 = crowdGroup.getName();
+            String crowdName = crowdGroup.getName();
             String description = crowdGroup.getDescription();
 
             int startIndex = 0;
             int fetchSize = -1;
 
-            List<String> namesOfUsersOfGroup = client.getNamesOfUsersOfGroup(name1, startIndex, fetchSize);
+            List<String> namesOfUsersOfGroup = client.getNamesOfUsersOfGroup(crowdName, startIndex, fetchSize);
             List<JID> membersJid = new ArrayList<JID>(namesOfUsersOfGroup.size());
             for (String member : namesOfUsersOfGroup) {
-                try {
-                    JID userJID;
-                    if (member.indexOf('@') == -1) {
-                        // Create JID of local user if JID does not match a component's JID
-                        userJID = server.createJID(member, null);
-                    } else {
-                        userJID = new JID(member);
-                    }
-                    membersJid.add(userJID);
-                } catch (IllegalArgumentException e) {
-                    // member isn't allowed in openfire
+                JID userJID;
+                if (member.indexOf('@') == -1) {
+                    // Create JID of local user if JID does not match a component's JID
+                    userJID = server.createJID(member, null);
+                } else {
+                    userJID = new JID(member);
                 }
+                membersJid.add(userJID);
             }
 
             group = new Group(name, description, membersJid, Collections.<JID>emptyList());
