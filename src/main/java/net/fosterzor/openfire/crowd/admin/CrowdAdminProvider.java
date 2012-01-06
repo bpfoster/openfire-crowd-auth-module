@@ -68,7 +68,7 @@ public class CrowdAdminProvider implements AdminProvider {
     }
 
     protected JID createJID(String username) {
-        return server.createJID("admin", null);
+        return server.createJID(username, null);
     }
 
     @Override

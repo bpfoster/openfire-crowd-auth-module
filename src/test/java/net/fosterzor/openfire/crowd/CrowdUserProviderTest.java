@@ -16,17 +16,22 @@
 
 package net.fosterzor.openfire.crowd;
 
+import com.atlassian.crowd.embedded.api.SearchRestriction;
+import com.atlassian.crowd.exception.OperationFailedException;
+import com.atlassian.crowd.search.query.entity.restriction.*;
 import com.atlassian.crowd.service.client.CrowdClient;
+import org.jivesoftware.openfire.user.User;
 import org.jivesoftware.openfire.user.UserNotFoundException;
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
-import static junit.framework.Assert.assertTrue;
+import java.util.*;
+
+import static junit.framework.Assert.*;
+import static org.powermock.api.mockito.PowerMockito.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -35,16 +40,19 @@ import static junit.framework.Assert.assertTrue;
  * Time: 9:00 AM
  * To change this template use File | Settings | File Templates.
  */
-@RunWith(JMock.class)
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(value = CrowdUserProvider.class)
 public class CrowdUserProviderTest {
-    private Mockery context = new JUnit4Mockery();
+    private static final TermRestriction<Boolean> ACTIVE_TERM_RESTRICTION = new TermRestriction<Boolean>(new PropertyImpl<Boolean>("active", Boolean.class), true);
+    private static final Date NOTIME = new Date(0);
+
     private CrowdClient crowdClient;
 
     private CrowdUserProvider userProvider;
 
     @Before
     public void setUp() {
-        crowdClient = context.mock(CrowdClient.class);
+        crowdClient = mock(CrowdClient.class);
         userProvider = new CrowdUserProvider(crowdClient);
     }
 
@@ -59,11 +67,135 @@ public class CrowdUserProviderTest {
     @Test(expected = UserNotFoundException.class)
     public void testLoadNotFoundUser() throws Exception {
         final String username = "nobody";
-        context.checking(new Expectations() {{
-            one(crowdClient).getUser(username);
-            will(returnValue(null));
-        }});
+
+        when(crowdClient.getUser(username)).thenReturn(null);
+
         userProvider.loadUser(username);
+    }
+
+    @Test
+    public void testLoadUser() throws Exception {
+        final String username = "mrbean";
+
+        final com.atlassian.crowd.model.user.User crowdUser = mock(com.atlassian.crowd.model.user.User.class);
+        final User openfireUser = mock(User.class);
+
+        final String name = "mrbean";
+        final String displayName = "Rowan Bean";
+        final String email = "mrbean@mrbean.com";
+
+        when(crowdUser.getName()).thenReturn(name);
+        when(crowdUser.getDisplayName()).thenReturn(displayName);
+        when(crowdUser.getEmailAddress()).thenReturn(email);
+
+        when(crowdClient.getUser(username)).thenReturn(crowdUser);
+
+        whenNew(User.class).withArguments(name, displayName, email, NOTIME, NOTIME).thenReturn(openfireUser);
+
+
+        User returnedUser = userProvider.loadUser(username);
+
+
+        assertNotNull(returnedUser);
+        assertSame(openfireUser, returnedUser);
+    }
+
+    @Test
+    public void testGetUsernames() throws Exception {
+        List collection = mock(List.class);
+        when(crowdClient.searchUserNames(ACTIVE_TERM_RESTRICTION, 0, -1)).thenReturn(collection);
+
+        userProvider.getUsernames();
+    }
+
+    @Test
+    public void testGetUsernamesFailed() throws Exception {
+        when(crowdClient.searchUserNames(ACTIVE_TERM_RESTRICTION, 0, -1)).thenThrow(new OperationFailedException());
+
+        Collection<String> usernames = userProvider.getUsernames();
+        assertNull(usernames);
+    }
+
+    @Test
+    public void testGetUsers() throws Exception {
+        final int startIndex = 10;
+        final int numResults = 20;
+
+        final String name = "mrbean";
+        final String displayName = "Rowan Bean";
+        final String email = "mrbean@mrbean.com";
+
+        final com.atlassian.crowd.model.user.User crowdUser = mock(com.atlassian.crowd.model.user.User.class);
+        final User openfireUser = mock(User.class);
+
+        when(crowdUser.getName()).thenReturn(name);
+        when(crowdUser.getDisplayName()).thenReturn(displayName);
+        when(crowdUser.getEmailAddress()).thenReturn(email);
+
+        List<com.atlassian.crowd.model.user.User> crowdUserList = new ArrayList<com.atlassian.crowd.model.user.User>();
+        crowdUserList.add(crowdUser);
+
+        when(crowdClient.searchUsers(ACTIVE_TERM_RESTRICTION, startIndex, numResults)).thenReturn(crowdUserList);
+
+        whenNew(User.class).withArguments(name, displayName, email, NOTIME, NOTIME).thenReturn(openfireUser);
+
+
+        Collection<User> users = userProvider.getUsers(startIndex, numResults);
+
+
+        assertEquals(1, users.size());
+        assertSame(openfireUser, users.iterator().next());
+    }
+
+    @Test
+    public void testGetUsersFail() throws Exception {
+        final int startIndex = 10;
+        final int numResults = 20;
+
+        when(crowdClient.searchUsers(ACTIVE_TERM_RESTRICTION, startIndex, numResults)).thenThrow(new OperationFailedException());
+
+        Collection<User> users = userProvider.getUsers(startIndex, numResults);
+
+        assertNull(users);
+    }
+
+    @Test
+    public void testFindUsers() throws Exception {
+        final String name = "mrbean";
+        final String displayName = "Rowan Bean";
+        final String email = "mrbean@mrbean.com";
+
+        final Set<String> fields = new HashSet<String>(Arrays.asList("name", "invalid"));
+
+        final String query = "mrbean";
+        final int startIndex = 10;
+        final int numResults = 20;
+
+
+        final com.atlassian.crowd.model.user.User crowdUser = mock(com.atlassian.crowd.model.user.User.class);
+        final User openfireUser = mock(User.class);
+
+        when(crowdUser.getName()).thenReturn(name);
+        when(crowdUser.getDisplayName()).thenReturn(displayName);
+        when(crowdUser.getEmailAddress()).thenReturn(email);
+
+        List<com.atlassian.crowd.model.user.User> crowdUserList = new ArrayList<com.atlassian.crowd.model.user.User>();
+        crowdUserList.add(crowdUser);
+
+
+        List<SearchRestriction> termRestrictionList = new ArrayList<SearchRestriction>(1);
+        termRestrictionList.add(new TermRestriction<String>(new PropertyImpl<String>("name", String.class), MatchMode.CONTAINS, query));
+
+        SearchRestriction fieldsRestrictions = new BooleanRestrictionImpl(BooleanRestriction.BooleanLogic.OR, termRestrictionList);
+
+        SearchRestriction restriction = new BooleanRestrictionImpl(BooleanRestriction.BooleanLogic.AND, fieldsRestrictions, ACTIVE_TERM_RESTRICTION);
+
+
+        when(crowdClient.searchUsers(restriction, startIndex, numResults)).thenReturn(crowdUserList);
+        whenNew(User.class).withArguments(name, displayName, email, NOTIME, NOTIME).thenReturn(openfireUser);
+
+        Collection<User> users = userProvider.findUsers(fields, query, startIndex, numResults);
+        assertEquals(1, users.size());
     }
 
 }

@@ -43,13 +43,16 @@ public class CrowdClientHolder {
     private static CrowdClient initClient() {
         CrowdClient result = null;
         Properties crowdProperties = new Properties();
+        InputStream fileInputStream = null;
         try {
             File file = new File(JiveGlobals.getHomeDirectory() + File.separator + "conf" + File.separator + CROWD_PROPERTIES);
             if (!file.exists() || !file.canRead()) {
                 throw new FileNotFoundException("Unable to open crowd.properties");
             }
+
+            fileInputStream = new FileInputStream(file);
             
-            crowdProperties.load(new FileInputStream(file));
+            crowdProperties.load(fileInputStream);
 
             String appName = crowdProperties.getProperty("application.name");
             String appPass = crowdProperties.getProperty("application.password");
@@ -60,6 +63,14 @@ public class CrowdClientHolder {
             result = new RestCrowdClientFactory().newInstance(url, appName, appPass);
         } catch (IOException e) {
             logger.error("ERROR creating Crowd client!!!!", e);
+        } finally {
+            if (fileInputStream != null) {
+                try {
+                    fileInputStream.close();
+                } catch (IOException e) {
+                    logger.info("Unable to close file input stream", e);
+                }
+            }
         }
 
         return result;

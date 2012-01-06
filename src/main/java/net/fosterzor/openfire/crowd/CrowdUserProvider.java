@@ -40,8 +40,9 @@ import java.util.*;
  */
 public class CrowdUserProvider implements UserProvider {
     private static final Logger logger = LoggerFactory.getLogger(CrowdUserProvider.class);
-    private static final TermRestriction ACTIVE_TERM_RESTRICTION = new TermRestriction(new PropertyImpl("active", Boolean.class), true);
+    private static final TermRestriction<Boolean> ACTIVE_TERM_RESTRICTION = new TermRestriction<Boolean>(new PropertyImpl<Boolean>("active", Boolean.class), true);
     private static final Date NOTIME = new Date(0);
+    private static final Set<String> SEARCH_FIELDS = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList("name", "email", "firstName", "lastName", "displayName")));
 
     private CrowdClient client;
 
@@ -56,7 +57,7 @@ public class CrowdUserProvider implements UserProvider {
 
     @Override
     public User loadUser(String username) throws UserNotFoundException {
-        User user = null;
+        User user;
         try {
             com.atlassian.crowd.model.user.User crowdUser = client.getUser(username);
             if (crowdUser == null) {
@@ -154,9 +155,7 @@ public class CrowdUserProvider implements UserProvider {
 
     @Override
     public Set<String> getSearchFields() throws UnsupportedOperationException {
-        Set<String> fields = new HashSet<String>(Arrays.asList("name", "email", "firstName", "lastName", "displayName"));
-
-        return fields;
+        return SEARCH_FIELDS;
     }
 
     @Override
@@ -168,7 +167,9 @@ public class CrowdUserProvider implements UserProvider {
     public Collection<User> findUsers(Set<String> fields, String query, int startIndex, int numResults) throws UnsupportedOperationException {
         List<SearchRestriction> termRestrictionList = new ArrayList<SearchRestriction>(fields.size());
         for (String field : fields) {
-            termRestrictionList.add(new TermRestriction(new PropertyImpl(field, String.class), MatchMode.CONTAINS, query));
+            if (SEARCH_FIELDS.contains(field.toLowerCase())) {
+                termRestrictionList.add(new TermRestriction<String>(new PropertyImpl<String>(field, String.class), MatchMode.CONTAINS, query));
+            }
         }
 
         SearchRestriction fieldsRestrictions = new BooleanRestrictionImpl(BooleanRestriction.BooleanLogic.OR, termRestrictionList);

@@ -21,10 +21,7 @@ import com.atlassian.crowd.exception.ApplicationPermissionException;
 import com.atlassian.crowd.exception.InvalidAuthenticationException;
 import com.atlassian.crowd.exception.OperationFailedException;
 import com.atlassian.crowd.exception.UserNotFoundException;
-import com.atlassian.crowd.search.query.entity.restriction.BooleanRestriction;
-import com.atlassian.crowd.search.query.entity.restriction.BooleanRestrictionImpl;
-import com.atlassian.crowd.search.query.entity.restriction.PropertyImpl;
-import com.atlassian.crowd.search.query.entity.restriction.TermRestriction;
+import com.atlassian.crowd.search.query.entity.restriction.*;
 import com.atlassian.crowd.service.client.CrowdClient;
 import net.fosterzor.openfire.crowd.CrowdClientHolder;
 import org.jivesoftware.openfire.XMPPServer;
@@ -50,9 +47,12 @@ import java.util.List;
  */
 public class CrowdGroupProvider implements GroupProvider {
     private static final Logger logger = LoggerFactory.getLogger(CrowdGroupProvider.class);
-    private static final TermRestriction ACTIVE_TERM_RESTRICTION = new TermRestriction(new PropertyImpl("active", Boolean.class), true);
+    private static final TermRestriction<Boolean> ACTIVE_TERM_RESTRICTION = new TermRestriction<Boolean>(new PropertyImpl<Boolean>("active", Boolean.class), true);
+    private static final Property<String> NAME_PROPERTY = new PropertyImpl<String>("name", String.class);
+
     private XMPPServer server = XMPPServer.getInstance();
     private CrowdClient client;
+
 
     public CrowdGroupProvider() {
         client = CrowdClientHolder.getClient();
@@ -92,7 +92,7 @@ public class CrowdGroupProvider implements GroupProvider {
             List<JID> membersJid = new ArrayList<JID>(namesOfUsersOfGroup.size());
             for (String member : namesOfUsersOfGroup) {
                 try {
-                    JID userJID = null;
+                    JID userJID;
                     if (member.indexOf('@') == -1) {
                         // Create JID of local user if JID does not match a component's JID
                         userJID = server.createJID(member, null);
@@ -208,7 +208,7 @@ public class CrowdGroupProvider implements GroupProvider {
     @Override
     public Collection<String> search(String query, int startIndex, int numResults) {
         Collection<String> groupNames = null;
-        SearchRestriction nameRestriction = new TermRestriction(new PropertyImpl("name", String.class), query);
+        SearchRestriction nameRestriction = new TermRestriction<String>(NAME_PROPERTY, query);
         SearchRestriction restriction = new BooleanRestrictionImpl(BooleanRestriction.BooleanLogic.AND, nameRestriction, ACTIVE_TERM_RESTRICTION);
         try {
             groupNames = client.searchGroupNames(restriction, startIndex, numResults);
