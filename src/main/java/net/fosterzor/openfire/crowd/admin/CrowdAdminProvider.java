@@ -55,7 +55,11 @@ public class CrowdAdminProvider implements AdminProvider {
         for (String groupName : groups) {
             try {
                 Group group = provider.getGroup(groupName);
-                admins.addAll(group.getMembers());
+                if (group != null) {
+                    admins.addAll(group.getMembers());
+                } else {
+                    logger.debug("Group with name: " + groupName + " was not found");
+                }
             } catch (GroupNotFoundException e) {
                 logger.error("Group with name: " + groupName + " was not found");
             }
