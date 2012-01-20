@@ -73,6 +73,28 @@ public class CrowdAdminProviderTest {
     }
 
     @Test
+    public void testGetAdminsNullGroup() throws Exception {
+        GroupManager groupManager = mock(GroupManager.class);
+        GroupProvider groupProvider = mock(GroupProvider.class);
+
+        mockStatic(GroupManager.class);
+        when(GroupManager.getInstance()).thenReturn(groupManager);
+
+        mockStatic(JiveGlobals.class);
+        when(JiveGlobals.getProperty(eq("crowdAuth.admin.groups"), anyString())).thenReturn("group1");
+
+        when(groupManager.getProvider()).thenReturn(groupProvider);
+
+        when(groupProvider.getGroup("group1")).thenReturn(null);
+
+        List<JID> admins = adminProvider.getAdmins();
+
+        assertEquals(1, admins.size());
+
+        assertEquals(new JID("admin"), admins.get(0));
+    }
+
+    @Test
     public void testEmptyAdminResults() throws Exception {
         GroupManager groupManager = mock(GroupManager.class);
         GroupProvider groupProvider = mock(GroupProvider.class);
