@@ -42,19 +42,28 @@ public class CrowdUserProvider implements UserProvider {
     private static final Logger logger = LoggerFactory.getLogger(CrowdUserProvider.class);
     private static final TermRestriction<Boolean> ACTIVE_TERM_RESTRICTION = new TermRestriction<Boolean>(new PropertyImpl<Boolean>("active", Boolean.class), true);
     private static final Date NOTIME = new Date(0);
-    private static final Set<String> SEARCH_FIELDS = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList("name", "email", "firstName", "lastName", "displayName")));
+    private static final Set<String> SEARCH_FIELDS = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList("Username", "Email", "Name")));
+    private final Map<String, String> SEARCH_FIELDS_MAP;
 
     private CrowdClient client;
 
     public CrowdUserProvider() {
-        client = CrowdClientHolder.getClient();
+        this(CrowdClientHolder.getClient());
+        
     }
 
-    // For unit testing
+    // Can be used for unit testing
     protected CrowdUserProvider(CrowdClient client) {
         this.client = client;
-    }
 
+        Map<String, String> searchFieldMap = new HashMap<String, String>();
+        searchFieldMap.put("Username", "name");
+        searchFieldMap.put("Email", "emailAddress");
+        searchFieldMap.put("Name", "displayName");
+        
+        SEARCH_FIELDS_MAP = Collections.unmodifiableMap(searchFieldMap);
+    }
+    
     @Override
     public User loadUser(String username) throws UserNotFoundException {
         User user;
@@ -166,9 +175,12 @@ public class CrowdUserProvider implements UserProvider {
     @Override
     public Collection<User> findUsers(Set<String> fields, String query, int startIndex, int numResults) throws UnsupportedOperationException {
         List<SearchRestriction> termRestrictionList = new ArrayList<SearchRestriction>(fields.size());
+        logger.debug("find users, query: {}, fields: {}", query, fields);
         for (String field : fields) {
-            if (SEARCH_FIELDS.contains(field.toLowerCase())) {
-                termRestrictionList.add(new TermRestriction<String>(new PropertyImpl<String>(field, String.class), MatchMode.CONTAINS, query));
+            if (SEARCH_FIELDS.contains(field)) {
+            	String searchField = SEARCH_FIELDS_MAP.get(field);
+            	logger.debug("Add search field: {} --> {}", field, searchField);
+                termRestrictionList.add(new TermRestriction<String>(new PropertyImpl<String>(searchField, String.class), MatchMode.CONTAINS, query));
             }
         }
 
@@ -178,7 +190,10 @@ public class CrowdUserProvider implements UserProvider {
 
         Collection<User> users = null;
         try {
+        	logger.debug("Search users with restriction: {}", restriction);
             List<com.atlassian.crowd.model.user.User> crowdUsers = client.searchUsers(restriction, startIndex, numResults);
+            
+            logger.debug("Search users returned count: {}", crowdUsers != null ? crowdUsers.size() : "null");
             users = transformUsers(crowdUsers);
         } catch (OperationFailedException e) {
             logger.error("Error searching users", e);
@@ -194,6 +209,7 @@ public class CrowdUserProvider implements UserProvider {
     private Collection<User> transformUsers(List<com.atlassian.crowd.model.user.User> crowdUsers) {
         Collection<User> users = new ArrayList<User>();
         for (com.atlassian.crowd.model.user.User crowdUser : crowdUsers) {
+        	logger.debug("Add crowd user, display name: {}, name: {}", crowdUser.getDisplayName(), crowdUser.getName());
             users.add(new User(crowdUser.getName(), crowdUser.getDisplayName(), crowdUser.getEmailAddress(), NOTIME, NOTIME));
         }
 
