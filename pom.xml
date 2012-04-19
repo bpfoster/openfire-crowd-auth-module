@@ -24,7 +24,7 @@
 
     <properties>
         <powermock.version>1.4.11</powermock.version>
-        <crowd.version>2.3.3</crowd.version>
+        <crowd.version>2.3.6</crowd.version>
     </properties>
 
     <repositories>
