@@ -165,7 +165,7 @@ public class CrowdUserProviderTest {
         final String displayName = "Rowan Bean";
         final String email = "mrbean@mrbean.com";
 
-        final Set<String> fields = new HashSet<String>(Arrays.asList("name", "invalid"));
+        final Set<String> fields = new HashSet<String>(Arrays.asList("Username", "invalid"));
 
         final String query = "mrbean";
         final int startIndex = 10;
