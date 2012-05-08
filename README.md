@@ -1,4 +1,4 @@
-Openfire Crowd Auth Module
+Openfire Crowd Auth Module  ![](https://secure.travis-ci.org/bpfoster/openfire-crowd-auth-module.png?branch=master)
 =============
 
 This is a module that allows Openfire to authenticate and retrieve user and group information from Atlassian Crowd.
